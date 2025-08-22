@@ -12,7 +12,7 @@ import {
 import VideoDropzone from "./videoDropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { generatePresignedUrl } from "./actions";
+import { createVideoRecord, generatePresignedUrl } from "./actions"; // Import the new action
 import { CheckCircle2 } from "lucide-react";
 
 export default function UploadPage() {
@@ -66,20 +66,32 @@ export default function UploadPage() {
         }
       };
 
-      xhr.onload = () => {
+      xhr.onload = async () => {
+        // Make this function async
         if (xhr.status >= 200 && xhr.status < 300) {
-          console.log("File uploaded successfully!");
-          console.log("Storage Path:", storagePath);
+          // --- THIS IS THE MODIFIED PART ---
+          // S3 upload is successful, now create the DB record
+          const dbResponse = await createVideoRecord(
+            file.name,
+            file.size,
+            storagePath
+          );
 
+          if (dbResponse.failure) {
+            // If DB insert fails, show an error
+            throw new Error(dbResponse.failure);
+          }
+
+          console.log("Successfully created video record:", dbResponse.success);
           setUploadSuccess(true);
 
-          // Reset the component after a short delay
           setTimeout(() => {
             setFile(null);
             setIsUploading(false);
             setUploadSuccess(false);
             setUploadProgress(0);
-          }, 5000);
+          }, 3000);
+          // --- END OF MODIFICATION ---
         } else {
           throw new Error(
             `Upload failed with status: ${xhr.status} ${xhr.statusText}`
@@ -99,6 +111,7 @@ export default function UploadPage() {
     }
   };
 
+  // ... (The return statement with the JSX remains exactly the same)
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Card>
@@ -113,11 +126,9 @@ export default function UploadPage() {
             {!isUploading && !uploadSuccess && (
               <VideoDropzone onFileAccepted={handleFileAccepted} />
             )}
-
             {error && (
               <p className="text-red-500 text-sm text-center">{error}</p>
             )}
-
             {file && !isUploading && !uploadSuccess && (
               <div className="text-center">
                 <Button onClick={handleUpload} size="lg">
@@ -125,7 +136,6 @@ export default function UploadPage() {
                 </Button>
               </div>
             )}
-
             {isUploading && !uploadSuccess && (
               <div className="space-y-2 text-center">
                 <p className="text-sm">Uploading: {file?.name}</p>
@@ -135,8 +145,6 @@ export default function UploadPage() {
                 </p>
               </div>
             )}
-
-            {/* ---  SUCCESS MESSAGE --- */}
             {uploadSuccess && (
               <div className="flex flex-col items-center justify-center text-center p-6 bg-green-500/10 rounded-lg">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />

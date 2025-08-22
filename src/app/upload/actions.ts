@@ -8,6 +8,7 @@ import { createServerClient } from "@supabase/ssr";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
+import { videoProcessingQueue } from "@/lib/queue";
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION!,
@@ -75,4 +76,57 @@ export async function generatePresignedUrl(
     console.error("Error generating signed URL:", error);
     return { failure: "Could not generate signed URL" };
   }
+}
+
+export async function createVideoRecord(
+  name: string,
+  sizeInBytes: number,
+  storagePath: string
+) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { failure: "Not authenticated" };
+  }
+
+  const { data, error } = await supabase
+    .from("videos")
+    .insert([
+      {
+        name,
+        size_in_bytes: sizeInBytes,
+        storage_path: storagePath,
+        user_id: user.id,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating video record:", error);
+    return { failure: "Could not create video record in database." };
+  }
+
+  if (data) {
+    await videoProcessingQueue.add("process-video", {
+      videoId: data.id,
+    });
+    console.log(`Added job to queue for videoId: ${data.id}`);
+  }
+
+  return { success: data[0] };
 }
