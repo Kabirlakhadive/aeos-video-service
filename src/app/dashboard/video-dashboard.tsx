@@ -1,23 +1,60 @@
+// src/app/dashboard/video-dashboard.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { type Video } from "./page";
 import VideoCard from "./video-card";
+import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 
-interface VideoDashboardPage {
+interface VideoDashboardProps {
   initialVideos: Video[];
 }
 
-export default function VideoDashboard({ initialVideos }: VideoDashboardPage) {
-  if (initialVideos.length === 0) {
-    return <p>No videos found</p>;
+export default function VideoDashboard({ initialVideos }: VideoDashboardProps) {
+  const [videos, setVideos] = useState(initialVideos);
+  const supabase = createClient();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const channel = supabase
+        .channel("videos_follow_up")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "videos",
+          },
+          (payload) => {
+            console.log("Realtime update received!", payload);
+            const updatedVideo = payload.new as Video;
+
+            setVideos((currentVideos) =>
+              currentVideos.map((video) =>
+                video.id === updatedVideo.id ? updatedVideo : video
+              )
+            );
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [supabase]);
+
+  if (videos.length === 0) {
+    return <p>You haven't uploaded any videos yet.</p>;
   }
 
   return (
-    <div>
-      {initialVideos.map((video) => (
-        <div key={video.id} className="rounded-md p-2">
-          <VideoCard key={video.id} video={video} />
-        </div>
+    <div className="space-y-4">
+      {videos.map((video) => (
+        <Link key={video.id} href={`/video/${video.id}`} className="block">
+          <VideoCard video={video} />
+        </Link>
       ))}
     </div>
   );
