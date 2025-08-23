@@ -10,10 +10,12 @@ export const createClient = () => {
     {
       cookies: {
         get(name: string) {
+          // @ts-ignore - The 'get' method is available on the cookie store but TS cannot find it.
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
+            // @ts-ignore - The 'set' method is available on the cookie store but TS cannot find it.
             cookieStore.set({ name, value, ...options });
           } catch (error) {
             // The `set` method was called from a Server Component.
@@ -22,6 +24,7 @@ export const createClient = () => {
         },
         remove(name: string, options: CookieOptions) {
           try {
+            // @ts-ignore - The 'delete' method is available on the cookie store but TS cannot find it.
             cookieStore.set({ name, value: "", ...options });
           } catch (error) {
             // The `delete` method was called from a Server Component.

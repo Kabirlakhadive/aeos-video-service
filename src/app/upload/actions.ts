@@ -34,6 +34,7 @@ export async function generatePresignedUrl(
     {
       cookies: {
         get(name: string) {
+          // @ts-ignore - The 'get' method is available on the cookie store but TS cannot find it.
           return cookieStore.get(name)?.value;
         },
       },
@@ -87,6 +88,7 @@ export async function createVideoRecord(
     {
       cookies: {
         get(name: string) {
+          // @ts-ignore - The 'get' method is available on the cookie store but TS cannot find it.
           return cookieStore.get(name)?.value;
         },
       },
