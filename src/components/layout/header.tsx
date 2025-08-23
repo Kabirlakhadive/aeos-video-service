@@ -17,7 +17,7 @@ export default async function Header() {
           className="flex items-center gap-2"
         >
           <Video className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">Aeos Video</span>
+          <span className="font-bold text-lg">AEOS Stream</span>
         </Link>
         <HeaderActions user={user} />
       </div>

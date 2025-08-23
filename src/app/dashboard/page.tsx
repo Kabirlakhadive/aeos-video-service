@@ -1,6 +1,7 @@
 import { createClient } from "../../lib/supabase/server";
 import { redirect } from "next/navigation";
 import VideoDashboard from "./video-dashboard";
+import Link from "next/link";
 
 export type Video = {
   id: string;
@@ -16,6 +17,16 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h1>Your Videos</h1>
+        <Link href="/dashboard/link">Manage All Links</Link>
+      </div>
       <h1>Your Videos</h1>
       <VideoDashboard initialVideos={videos} />
     </div>
