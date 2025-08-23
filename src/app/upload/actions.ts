@@ -1,10 +1,7 @@
-// @ts-nocheck
-// src/app/upload/actions.ts
-
 "use server";
 
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
@@ -128,5 +125,5 @@ export async function createVideoRecord(
     console.log(`Added job to queue for videoId: ${data.id}`);
   }
 
-  return { success: data[0] };
+  return { success: data };
 }

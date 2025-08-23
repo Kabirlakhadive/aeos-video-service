@@ -1,4 +1,3 @@
-// src/app/upload/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -12,7 +11,7 @@ import {
 import VideoDropzone from "./videoDropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { createVideoRecord, generatePresignedUrl } from "./actions"; // Import the new action
+import { createVideoRecord, generatePresignedUrl } from "./actions";
 import { CheckCircle2 } from "lucide-react";
 
 export default function UploadPage() {
@@ -67,10 +66,7 @@ export default function UploadPage() {
       };
 
       xhr.onload = async () => {
-        // Make this function async
         if (xhr.status >= 200 && xhr.status < 300) {
-          // --- THIS IS THE MODIFIED PART ---
-          // S3 upload is successful, now create the DB record
           const dbResponse = await createVideoRecord(
             file.name,
             file.size,
@@ -78,7 +74,6 @@ export default function UploadPage() {
           );
 
           if (dbResponse.failure) {
-            // If DB insert fails, show an error
             throw new Error(dbResponse.failure);
           }
 
@@ -91,7 +86,6 @@ export default function UploadPage() {
             setUploadSuccess(false);
             setUploadProgress(0);
           }, 3000);
-          // --- END OF MODIFICATION ---
         } else {
           throw new Error(
             `Upload failed with status: ${xhr.status} ${xhr.statusText}`
@@ -104,14 +98,15 @@ export default function UploadPage() {
       };
 
       xhr.send(file);
-    } catch (err: any) {
-      setError(err.message || "An unknown error occurred.");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred.";
+      setError(errorMessage);
       setIsUploading(false);
       setUploadProgress(0);
     }
   };
 
-  // ... (The return statement with the JSX remains exactly the same)
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Card>

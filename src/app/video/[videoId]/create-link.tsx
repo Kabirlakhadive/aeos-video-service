@@ -1,4 +1,3 @@
-// src/app/video/[videoId]/create-share-link.tsx
 "use client";
 
 import { useState } from "react";
@@ -24,6 +23,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { createShareLink } from "./actions";
 import { toast } from "sonner";
+
+type ExpiryValue = "1h" | "12h" | "1d" | "30d" | "never";
+
 interface CreateShareLinkProps {
   videoId: string;
 }
@@ -32,9 +34,7 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [emails, setEmails] = useState("");
-  const [expiry, setExpiry] = useState<"1h" | "12h" | "1d" | "30d" | "never">(
-    "30d"
-  );
+  const [expiry, setExpiry] = useState<ExpiryValue>("30d");
   const [error, setError] = useState<string | null>(null);
 
   const handleCreateLink = async () => {
@@ -129,7 +129,7 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
             <Label>Link Expiry</Label>
             <Select
               value={expiry}
-              onValueChange={(value) => setExpiry(value as any)}
+              onValueChange={(value) => setExpiry(value as ExpiryValue)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select an expiry duration" />

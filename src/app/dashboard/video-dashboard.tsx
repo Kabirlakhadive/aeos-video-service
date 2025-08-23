@@ -1,4 +1,3 @@
-// src/app/dashboard/video-dashboard.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,37 +15,35 @@ export default function VideoDashboard({ initialVideos }: VideoDashboardProps) {
   const supabase = createClient();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const channel = supabase
-        .channel("videos_follow_up")
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "videos",
-          },
-          (payload) => {
-            console.log("Realtime update received!", payload);
-            const updatedVideo = payload.new as Video;
+    const channel = supabase
+      .channel("videos_follow_up")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "videos",
+        },
+        (payload) => {
+          console.log("Realtime update received!", payload);
+          const updatedVideo = payload.new as Video;
 
-            setVideos((currentVideos) =>
-              currentVideos.map((video) =>
-                video.id === updatedVideo.id ? updatedVideo : video
-              )
-            );
-          }
-        )
-        .subscribe();
+          setVideos((currentVideos) =>
+            currentVideos.map((video) =>
+              video.id === updatedVideo.id ? updatedVideo : video
+            )
+          );
+        }
+      )
+      .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [supabase]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, videos]);
 
   if (videos.length === 0) {
-    return <p>You haven't uploaded any videos yet.</p>;
+    return <p>You have not uploaded any videos yet.</p>;
   }
 
   return (
