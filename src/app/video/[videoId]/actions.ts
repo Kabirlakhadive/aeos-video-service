@@ -1,9 +1,12 @@
+// src/app/video/[videoId]/actions.ts
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { fail } from "assert";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 type CreateLinkPayload = {
   videoId: string;
@@ -25,8 +28,6 @@ function getExpiryTimestamp(expiry: CreateLinkPayload["expiry"]): Date | null {
       return new Date(now.setDate(now.getDate() + 30));
     case "never":
       return null;
-    default:
-      return null;
   }
 }
 
@@ -42,17 +43,18 @@ export async function createShareLink(payload: CreateLinkPayload) {
 
   const { data: video, error: videoError } = await supabase
     .from("videos")
-    .select("id")
+    .select("id, name")
     .eq("id", payload.videoId)
     .eq("user_id", user.id)
     .single();
 
   if (videoError || !video) {
-    return { failure: "Video not found" };
+    return {
+      failure: "Video not found or you do not have permission to share it.",
+    };
   }
 
   const token = crypto.randomBytes(16).toString("hex");
-
   const expires_at = getExpiryTimestamp(payload.expiry);
 
   const { data, error } = await supabase
@@ -69,11 +71,27 @@ export async function createShareLink(payload: CreateLinkPayload) {
     .single();
 
   if (error) {
-    console.error("Error while creating share link:", error);
-    return { failure: "Could not create a share link." };
+    console.error("Error creating share link:", error);
+    return { failure: "Could not create share link." };
+  }
+
+  if (payload.visibility === "PRIVATE" && payload.emails.length > 0) {
+    const shareUrl = `${
+      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    }/share/${token}`;
+    try {
+      resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: payload.emails,
+        subject: `A video has been shared with you`,
+        text: `${user.email} has shared the video "${video.name}" with you. Click the link to watch: ${shareUrl}`,
+      });
+      console.log("Share notification email sent to:", payload.emails);
+    } catch (emailError) {
+      console.error("Failed to send share notification email:", emailError);
+    }
   }
 
   revalidatePath(`/video/${payload.videoId}`);
-
   return { success: data };
 }

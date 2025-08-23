@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { createShareLink } from "./actions";
-
+import { toast } from "sonner";
 interface CreateShareLinkProps {
   videoId: string;
 }
@@ -55,8 +55,18 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
     if (result.failure) {
       setError(result.failure);
     } else {
-      setIsOpen(false);
+      toast.success("Link Created Successfully!", {
+        description: "The shareable link has been added to the list below.",
+      });
 
+      if (visibility === "PRIVATE" && emails.length > 0) {
+        toast.info("Email Notification Sent", {
+          description:
+            "For this demo, all emails are sent to a pre-verified address.",
+        });
+      }
+
+      setIsOpen(false);
       setVisibility("PUBLIC");
       setEmails("");
       setExpiry("30d");
