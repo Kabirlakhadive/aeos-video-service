@@ -1,11 +1,15 @@
+// src/app/upload/actions.ts
+
 "use server";
 
 import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
-import { videoProcessingQueue } from "@/lib/queue";
+// REMOVED: import { videoProcessingQueue } from "@/lib/queue";
+// ADDED: The new, serverless-safe function
+import { addJobToQueue } from "@/lib/queue-client";
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION!,
@@ -34,7 +38,7 @@ export async function generatePresignedUrl(
     {
       cookies: {
         get(name: string) {
-          // @ts-ignore - The 'get' method is available on the cookie store but TS cannot find it.
+          // @ts-ignore
           return cookieStore.get(name)?.value;
         },
       },
@@ -88,7 +92,7 @@ export async function createVideoRecord(
     {
       cookies: {
         get(name: string) {
-          // @ts-ignore - The 'get' method is available on the cookie store but TS cannot find it.
+          // @ts-ignore
           return cookieStore.get(name)?.value;
         },
       },
@@ -121,7 +125,8 @@ export async function createVideoRecord(
   }
 
   if (data) {
-    await videoProcessingQueue.add("process-video", {
+    // THIS IS THE CORRECTED LINE:
+    await addJobToQueue("process-video", {
       videoId: data.id,
     });
     console.log(`Added job to queue for videoId: ${data.id}`);

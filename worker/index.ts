@@ -1,7 +1,8 @@
 // worker/index.ts
 
 import { Worker, Job } from "bullmq";
-import { VIDEO_PROCESSING_QUEUE_NAME, redisConnection } from "../src/lib/queue";
+// CORRECTED IMPORT PATH:
+import { VIDEO_PROCESSING_QUEUE_NAME, redisConnection } from "./queue-setup";
 import {
   S3Client,
   GetObjectCommand,

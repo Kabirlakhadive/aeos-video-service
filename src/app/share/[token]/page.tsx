@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
-// This interface can be removed as we will type the props directly in the function.
+import SharedVideoPlayer from "./share-video-player";
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION!,
@@ -15,7 +14,6 @@ const s3Client = new S3Client({
   },
 });
 
-// The fix is here: we type the props directly and correctly.
 export default async function SharePage({
   params,
 }: {
@@ -24,16 +22,24 @@ export default async function SharePage({
   const supabase = createClient();
   const { token } = params;
 
-  const { data: link, error: linkError } = await supabase
+  // Fetch all necessary data at the top level
+  const linkPromise = supabase
     .from("share_links")
-    .select(
-      `
-      *,
-      videos ( id, name, status, storage_path )
-    `
-    )
+    .select("*, videos(id, name, status, storage_path)")
     .eq("token", token)
     .single();
+
+  const userPromise = supabase.auth.getUser();
+
+  // Await promises concurrently for better performance
+  const [
+    { data: link, error: linkError },
+    {
+      data: { user },
+    },
+  ] = await Promise.all([linkPromise, userPromise]);
+
+  // --- Handle all error and access logic on the server ---
 
   if (linkError || !link) {
     notFound();
@@ -49,9 +55,6 @@ export default async function SharePage({
   }
 
   if (link.visibility === "PRIVATE") {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) {
       return (
         <div>
@@ -85,6 +88,8 @@ export default async function SharePage({
     );
   }
 
+  // --- If all checks pass, prepare the final props ---
+
   let videoUrl = "";
   try {
     const command = new GetObjectCommand({
@@ -93,7 +98,7 @@ export default async function SharePage({
     });
     videoUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
   } catch (err) {
-    console.error("Error generating signed URL for shared video:", err);
+    console.error("Error generating signed URL:", err);
     return (
       <div>
         <h1>Error</h1>
@@ -102,21 +107,13 @@ export default async function SharePage({
     );
   }
 
-  supabase
-    .from("share_links")
-    .update({ last_viewed_at: new Date().toISOString() })
-    .eq("id", link.id)
-    .then(({ error }) => {
-      if (error) console.error("Failed to update last_viewed_at:", error);
-    });
+  // --- Render the simple Client Component with clean props ---
 
   return (
-    <div>
-      <h1>{video.name}</h1>
-      <video controls preload="auto" className="w-full bg-black">
-        <source src={videoUrl} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-    </div>
+    <SharedVideoPlayer
+      videoName={video.name}
+      videoUrl={videoUrl}
+      linkId={link.id}
+    />
   );
 }
