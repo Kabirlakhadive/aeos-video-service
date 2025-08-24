@@ -5,11 +5,7 @@ import { notFound } from "next/navigation";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-interface SharePageProps {
-  params: {
-    token: string;
-  };
-}
+// This interface can be removed as we will type the props directly in the function.
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION!,
@@ -19,7 +15,12 @@ const s3Client = new S3Client({
   },
 });
 
-export default async function SharePage({ params }: SharePageProps) {
+// The fix is here: we type the props directly and correctly.
+export default async function SharePage({
+  params,
+}: {
+  params: { token: string };
+}) {
   const supabase = createClient();
   const { token } = params;
 

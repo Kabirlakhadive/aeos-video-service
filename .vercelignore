@@ -1,0 +1,6 @@
+# Ignore all files related to the Fly.io worker deployment
+
+worker/
+fly.toml
+Dockerfile
+docker-entrypoint.js
