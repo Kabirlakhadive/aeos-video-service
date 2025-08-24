@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Image as ImageIcon, Loader2 } from "lucide-react";
 import { getThumbnailUrls, getDownloadUrl } from "./actions";
-import Image from "next/image";
 
 interface VideoCardProps {
   video: Video;
@@ -66,42 +65,34 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   return (
-    <div className="p-4 border rounded-lg flex flex-col sm:flex-row gap-4 items-center hover:bg-muted/50 transition-colors">
-      <div className="w-32 h-20 bg-secondary rounded-md flex-shrink-0 relative">
+    <div className="p-4 border rounded-md flex gap-4 items-center">
+      <div className="w-32 h-20 bg-secondary rounded-md flex items-center justify-center">
         {video.status === "READY" && isLoadingThumbs && (
-          <div className="w-full h-full flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
+          <Loader2 className="h-6 w-6 animate-spin" />
         )}
         {video.status === "READY" &&
           !isLoadingThumbs &&
           thumbnailUrls.length > 0 && (
-            <Image
+            <img
               src={thumbnailUrls[0]}
               alt={`Thumbnail for ${video.name}`}
-              fill
-              className="object-cover rounded-md"
-              sizes="128px"
+              className="w-full h-full object-cover rounded-md"
             />
           )}
         {video.status !== "READY" && (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="h-6 w-6 text-muted-foreground" />
-          </div>
+          <ImageIcon className="h-6 w-6 text-muted-foreground" />
         )}
       </div>
 
-      <div className="flex-grow w-full">
-        <p className="font-bold text-lg truncate">{video.name}</p>
+      <div className="flex-grow">
+        <p className="font-bold truncate">{video.name}</p>
         <p className="text-sm text-muted-foreground">
           {new Date(video.created_at).toLocaleString()}
         </p>
-        <Badge variant={getStatusVariant()} className="mt-1">
-          {video.status}
-        </Badge>
+        <Badge variant={getStatusVariant()}>{video.status}</Badge>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="flex items-center gap-2">
         {video.status === "READY" && (
           <Button
             variant="outline"
