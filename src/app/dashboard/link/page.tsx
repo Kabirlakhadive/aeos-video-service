@@ -1,5 +1,5 @@
 // @ts-nocheck
-// src/app/dashboard/link/page.tsx
+// src/app/dashboard/links/page.tsx
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -26,25 +26,33 @@ async function getLinks() {
   }
 
   const { data, error } = await supabase
-    .from("share_links")
+    .from("videos")
     .select(
       `
-      id,
-      token,
-      visibility,
-      expires_at,
-      last_viewed_at,
-      videos ( name )
+      name,
+      share_links ( id, token, visibility, expires_at, last_viewed_at, created_at )
     `
     )
-    .order("created_at", { ascending: false });
+    .eq("user_id", user.id);
 
   if (error) {
-    console.error("Error fetching share links:", error);
+    console.error("Error fetching links:", error);
     return [];
   }
 
-  return data;
+  const allLinks = data.flatMap((video) =>
+    video.share_links.map((link) => ({
+      ...link,
+      videos: { name: video.name },
+    }))
+  );
+
+  allLinks.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  return allLinks;
 }
 
 export default async function LinkManagementPage() {

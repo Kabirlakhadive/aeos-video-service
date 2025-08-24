@@ -3,20 +3,32 @@ import { notFound } from "next/navigation";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { formatBytes } from "@/lib/utils";
-import CreateShareLink from "./create-link";
-import ShareLinksList from "./links-list";
+import CreateShareLink from "./create-link"; // Using your file name
+import ShareLinksList from "./links-list"; // Using your file name
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
+// Define the type for a single share link
 export type ShareLink = {
   id: string;
   token: string;
   visibility: "PUBLIC" | "PRIVATE";
   expires_at: string | null;
   created_at: string;
+};
+
+// Define the type for the video data, including the nested share links
+type VideoWithLinks = {
+  id: string;
+  name: string;
+  status: "PROCESSING" | "READY" | "FAILED";
+  created_at: string;
+  storage_path: string | null;
+  size_in_bytes: number;
+  share_links: ShareLink[];
 };
 
 interface VideoPageProps {
@@ -37,6 +49,8 @@ export default async function VideoPage({ params }: VideoPageProps) {
   const supabase = createClient();
   const { videoId } = params;
 
+  // Fetch the video and its related share links.
+  // The RLS policy on 'videos' ensures the user can only access their own.
   const { data: video, error: videoError } = await supabase
     .from("videos")
     .select(
@@ -48,27 +62,31 @@ export default async function VideoPage({ params }: VideoPageProps) {
     .eq("id", videoId)
     .single();
 
+  // If the video doesn't exist or the user doesn't own it, RLS will cause an error.
   if (videoError || !video) {
     notFound();
   }
 
+  // Safely cast the fetched data to our specific type.
+  const typedVideo = video as VideoWithLinks;
+
   let videoUrl = "";
-  if (video.status === "READY" && video.storage_path) {
+  let videoUrlError = false;
+  if (typedVideo.status === "READY" && typedVideo.storage_path) {
     try {
       const command = new GetObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME!,
-        Key: video.storage_path,
+        Key: typedVideo.storage_path,
       });
       videoUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     } catch (err) {
       console.error("Error generating signed URL for video:", err);
+      videoUrlError = true; // Set a flag to show an error in the UI
     }
   }
 
-  const shareLinks = (video.share_links as unknown as ShareLink[]) || [];
-
   const getStatusVariant = () => {
-    switch (video.status) {
+    switch (typedVideo.status) {
       case "READY":
         return "default";
       case "PROCESSING":
@@ -96,7 +114,7 @@ export default async function VideoPage({ params }: VideoPageProps) {
         <div className="lg:col-span-2 space-y-4">
           {/* Video Player */}
           <div className="aspect-video w-full">
-            {video.status === "READY" && videoUrl ? (
+            {typedVideo.status === "READY" && videoUrl ? (
               <video
                 controls
                 preload="metadata"
@@ -108,7 +126,9 @@ export default async function VideoPage({ params }: VideoPageProps) {
             ) : (
               <div className="w-full h-full bg-secondary rounded-lg flex items-center justify-center">
                 <p className="text-muted-foreground">
-                  Video is still {video.status.toLowerCase()}...
+                  {videoUrlError
+                    ? "Error loading video."
+                    : `Video is still ${typedVideo.status.toLowerCase()}...`}
                 </p>
               </div>
             )}
@@ -121,7 +141,7 @@ export default async function VideoPage({ params }: VideoPageProps) {
               <CreateShareLink videoId={videoId} />
             </CardHeader>
             <CardContent>
-              <ShareLinksList links={shareLinks} />
+              <ShareLinksList links={typedVideo.share_links} />
             </CardContent>
           </Card>
         </div>
@@ -130,26 +150,28 @@ export default async function VideoPage({ params }: VideoPageProps) {
         <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle className="truncate text-xl">{video.name}</CardTitle>
+              <CardTitle className="truncate text-xl">
+                {typedVideo.name}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-muted-foreground">
                   Status
                 </span>
-                <Badge variant={getStatusVariant()}>{video.status}</Badge>
+                <Badge variant={getStatusVariant()}>{typedVideo.status}</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-muted-foreground">
                   Size
                 </span>
-                <span>{formatBytes(video.size_in_bytes)}</span>
+                <span>{formatBytes(typedVideo.size_in_bytes)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-muted-foreground">
                   Uploaded
                 </span>
-                <span>{new Date(video.created_at).toLocaleString()}</span>
+                <span>{new Date(typedVideo.created_at).toLocaleString()}</span>
               </div>
             </CardContent>
           </Card>

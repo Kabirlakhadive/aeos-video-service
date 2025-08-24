@@ -23,7 +23,9 @@ export default function VideoDropzone({ onFileAccepted }: VideoDropzoneProps) {
       if (fileRejections.length > 0) {
         const rejectionError = fileRejections[0].errors[0];
         setError(
-          `File is too large. Max size is ${formatBytes(MAX_FILE_SIZE)} `
+          `File is too large.\n Or unsupported file type.\n Max size is ${formatBytes(
+            MAX_FILE_SIZE
+          )} `
         );
         setFile(null);
         onFileAccepted(null);
