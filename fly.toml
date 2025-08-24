@@ -1,0 +1,18 @@
+# fly.toml app configuration file generated for aeos-video-worker on 2025-08-24T11:45:10+05:30
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'aeos-video-worker'
+primary_region = 'bom'
+
+[build]
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+
+[processes]
+  worker = "npm run worker"
