@@ -22,7 +22,6 @@ export default async function SharePage({
   const supabase = createClient();
   const { token } = params;
 
-  // Fetch all necessary data at the top level
   const linkPromise = supabase
     .from("share_links")
     .select("*, videos(id, name, status, storage_path)")
@@ -31,15 +30,12 @@ export default async function SharePage({
 
   const userPromise = supabase.auth.getUser();
 
-  // Await promises concurrently for better performance
   const [
     { data: link, error: linkError },
     {
       data: { user },
     },
   ] = await Promise.all([linkPromise, userPromise]);
-
-  // --- Handle all error and access logic on the server ---
 
   if (linkError || !link) {
     notFound();
@@ -88,8 +84,6 @@ export default async function SharePage({
     );
   }
 
-  // --- If all checks pass, prepare the final props ---
-
   let videoUrl = "";
   try {
     const command = new GetObjectCommand({
@@ -106,8 +100,6 @@ export default async function SharePage({
       </div>
     );
   }
-
-  // --- Render the simple Client Component with clean props ---
 
   return (
     <SharedVideoPlayer

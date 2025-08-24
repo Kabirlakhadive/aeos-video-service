@@ -1,4 +1,3 @@
-// src/app/dashboard/actions.ts
 "use server";
 
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
@@ -27,5 +26,21 @@ export async function getThumbnailUrls(thumbnailKeys: string[]) {
   } catch (error) {
     console.error("Error generating signed URLs for thumbnails:", error);
     return { failure: "Could not get thumbnail URLs." };
+  }
+}
+
+export async function getDownloadUrl(videoKey: string, videoName: string) {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: videoKey,
+
+      ResponseContentDisposition: `attachment; filename="${videoName}"`,
+    });
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+    return { success: url };
+  } catch (error) {
+    console.error("Error generating signed URL for download:", error);
+    return { failure: "Could not get download URL." };
   }
 }
