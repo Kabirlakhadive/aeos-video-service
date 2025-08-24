@@ -65,10 +65,14 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   return (
-    <div className="p-4 border rounded-md flex gap-4 items-center">
-      <div className="w-32 h-20 bg-secondary rounded-md flex items-center justify-center">
+    // The main card container
+    <div className="flex w-full items-center gap-4 rounded-lg border p-3 shadow-sm transition-colors hover:bg-muted/50">
+      {/* Thumbnail: Fixed size, will not shrink */}
+      <div className="relative h-16 w-28 flex-shrink-0 rounded-md bg-secondary">
         {video.status === "READY" && isLoadingThumbs && (
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
         )}
         {video.status === "READY" &&
           !isLoadingThumbs &&
@@ -76,36 +80,43 @@ export default function VideoCard({ video }: VideoCardProps) {
             <img
               src={thumbnailUrls[0]}
               alt={`Thumbnail for ${video.name}`}
-              className="w-full h-full object-cover rounded-md"
+              className="h-full w-full rounded-md object-cover"
             />
           )}
         {video.status !== "READY" && (
-          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          <div className="flex h-full w-full items-center justify-center">
+            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          </div>
         )}
       </div>
 
-      <div className="flex-grow">
-        <p className="font-bold truncate">{video.name}</p>
-        <p className="text-sm text-muted-foreground">
+      {/* Middle Section: Title, Date, Status. Will grow and shrink */}
+      <div className="flex-grow min-w-0">
+        <p className="truncate font-semibold">{video.name}</p>
+        <p className="text-xs text-muted-foreground">
           {new Date(video.created_at).toLocaleString()}
         </p>
-        <Badge variant={getStatusVariant()}>{video.status}</Badge>
+        <div className="mt-1">
+          <Badge variant={getStatusVariant()}>{video.status}</Badge>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Right Section: Download Button. Will not shrink */}
+      <div className="flex-shrink-0">
         {video.status === "READY" && (
           <Button
             variant="outline"
             size="sm"
             onClick={handleDownload}
             disabled={isDownloading}
+            className="hidden sm:flex" // Hide on very small screens, show on 'sm' and up
           >
             {isDownloading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4" />
             )}
-            {isDownloading ? "Preparing..." : "Download"}
+            <span className="ml-2 hidden md:inline">Download</span>
           </Button>
         )}
       </div>
