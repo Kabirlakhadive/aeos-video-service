@@ -51,7 +51,7 @@ export default async function LinkManagementPage() {
   const links = await getLinks();
 
   return (
-    <Card>
+    <Card className="mt-10">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>

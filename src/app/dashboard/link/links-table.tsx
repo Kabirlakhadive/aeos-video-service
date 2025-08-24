@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2 } from "lucide-react"; // <-- IMPORT TRASH ICON
+import { Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteShareLink } from "./actions"; // <-- IMPORT THE NEW ACTION
+import { deleteShareLink } from "./actions";
 
 type Link = {
   id: string;
@@ -54,10 +54,8 @@ export default function LinksTable({ links }: LinksTableProps) {
       toast.error("Failed to delete link", { description: result.failure });
     } else {
       toast.success("Link deleted successfully.");
-      // The page will automatically re-render thanks to revalidatePath
     }
   };
-  // --- END OF NEW HANDLER ---
 
   return (
     <Table>
