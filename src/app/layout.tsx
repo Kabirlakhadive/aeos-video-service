@@ -21,8 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={montserrat.className}>
-        <Header />
-        <main className="flex-grow container mx-auto py-4 px-4">
+        <main className="flex-grow container max-w-screen-2xl mx-auto py-4 px-4">
+          <Header />
           {children}
         </main>
         <Toaster />

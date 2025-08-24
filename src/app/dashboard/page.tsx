@@ -2,6 +2,8 @@ import { createClient } from "../../lib/supabase/server";
 import { redirect } from "next/navigation";
 import VideoDashboard from "./video-dashboard";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ListVideo } from "lucide-react";
 
 export type Video = {
   id: string;
@@ -16,18 +18,22 @@ export default async function DashboardPage() {
   const videos = await getVideos();
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>Your Videos</h1>
-        <Link href="/dashboard/link">Manage All Links</Link>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Your Videos</h1>
+          <p className="text-muted-foreground">
+            Here is a list of all your uploaded videos.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href="/dashboard/link">
+            <ListVideo className="mr-2 h-4 w-4" />
+            Manage All Links
+          </Link>
+        </Button>
       </div>
-      <h1>Your Videos</h1>
+
       <VideoDashboard initialVideos={videos} />
     </div>
   );

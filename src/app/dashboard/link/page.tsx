@@ -1,9 +1,19 @@
 // @ts-nocheck
-// src/app/dashboard/links/page.tsx
+// src/app/dashboard/link/page.tsx
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import LinksTable from "./links-table";
 
 async function getLinks() {
   const supabase = createClient();
@@ -40,108 +50,27 @@ async function getLinks() {
 export default async function LinkManagementPage() {
   const links = await getLinks();
 
-  const isLinkActive = (expires_at: string | null) => {
-    if (!expires_at) return true;
-    return new Date(expires_at) > new Date();
-  };
-
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>All Share Links</h1>
-        <Link href="/dashboard">Back to Dashboard</Link>
-      </div>
-
-      <div style={{ border: "1px solid #ccc", marginTop: "1rem" }}>
-        {links.length === 0 ? (
-          <p style={{ padding: "1rem", textAlign: "center" }}>
-            You have not created any share links.
-          </p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    textAlign: "left",
-                  }}
-                >
-                  Video
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    textAlign: "left",
-                  }}
-                >
-                  Visibility
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    textAlign: "left",
-                  }}
-                >
-                  Expires
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    textAlign: "left",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    textAlign: "left",
-                  }}
-                >
-                  Last Viewed
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {links.map((link) => (
-                <tr key={link.id}>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {link.videos?.name ?? "Unknown Video"}
-                  </td>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {link.visibility}
-                  </td>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {link.expires_at
-                      ? new Date(link.expires_at).toLocaleString()
-                      : "Never"}
-                  </td>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {isLinkActive(link.expires_at) ? "Active" : "Expired"}
-                  </td>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {link.last_viewed_at
-                      ? new Date(link.last_viewed_at).toLocaleString()
-                      : "Never"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>All Share Links</CardTitle>
+            <CardDescription>
+              Manage all the links you have created for your videos.
+            </CardDescription>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <LinksTable links={links} />
+      </CardContent>
+    </Card>
   );
 }

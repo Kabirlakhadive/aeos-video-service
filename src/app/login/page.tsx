@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Mail, Lock, LogIn } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -42,48 +43,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center items-center h-full">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-3xl">Login</CardTitle>
+    <div className="flex justify-center items-center min-h-full px-4">
+      <Card className="w-full max-w-md border-none shadow-lg bg-card/80 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full">
+            <LogIn className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight pt-2">
+            Welcome Back
+          </CardTitle>
           <CardDescription>
-            Enter your email below to login to your account.
+            {"Don't have an account yet?"}{" "}
+            <Link href="/signup" className="underline text-primary">
+              Sign up
+            </Link>
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6">
-          {error && <p className="text-red-500 text-center">{error}</p>}
-          <div className="grid gap-4">
-            <Label htmlFor="email">Email</Label>
+        <CardContent className="space-y-4">
+          {error && <p className="text-sm text-center text-red-500">{error}</p>}
+
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               id="email"
               type="email"
-              placeholder="johndoe@exmaple.com"
+              placeholder="email address"
+              className="pl-10"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <div className="grid gap-4">
-            <Label htmlFor="password">Password</Label>
+
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               id="password"
               type="password"
+              placeholder="Password"
+              className="pl-10"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+
           <Button className="w-full" onClick={handleLogin} disabled={loading}>
-            {loading ? "Loading..." : "Sign in"}
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </CardContent>
-
-        <div className="text-center">
-          {"Don't have an account?"}{" "}
-          <Link href="/signup" className="underline">
-            Sign up
-          </Link>
-        </div>
       </Card>
     </div>
   );

@@ -7,8 +7,6 @@ import { createServerClient } from "@supabase/ssr";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
-// REMOVED: import { videoProcessingQueue } from "@/lib/queue";
-// ADDED: The new, serverless-safe function
 import { addJobToQueue } from "@/lib/queue-client";
 
 const s3Client = new S3Client({
@@ -125,7 +123,6 @@ export async function createVideoRecord(
   }
 
   if (data) {
-    // THIS IS THE CORRECTED LINE:
     await addJobToQueue("process-video", {
       videoId: data.id,
     });
