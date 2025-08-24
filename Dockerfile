@@ -1,56 +1,56 @@
 # syntax = docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=22.17.1
-FROM node:${NODE_VERSION}-slim AS base
+# 1. ===== BUILD STAGE =====
+# Using a full Node image to get all the build tools
+FROM node:22-slim AS builder
 
-LABEL fly_launch_runtime="Next.js"
-
-# Next.js app lives here
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
-
-
-# Throw-away build stage to reduce size of final image
-FROM base AS build
-
-# Install packages needed to build node modules
+# Install OS packages needed for building dependencies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
-# Install node modules
-COPY package-lock.json package.json ./
-RUN npm ci --include=dev
+# Copy dependency manifests
+COPY package.json package-lock.json ./
 
-# Copy application code
+# Install all dependencies (including devDependencies needed for the build)
+RUN npm ci
+
+# Copy the rest of the source code
+# We need tsconfig for the build and the worker directory itself
 COPY . .
 
-# Build the worker application
+# Build the worker from TypeScript to JavaScript
+# This will create a 'dist' directory
 RUN npm run build:worker
 
-# Build application
-RUN npx next build --experimental-build-mode compile
-
-# Remove development dependencies
+# Prune devDependencies to reduce the size of node_modules
 RUN npm prune --omit=dev
 
 
-# Final stage for app image
-FROM base
+# 2. ===== FINAL STAGE =====
+# Using a slim image for a smaller final container
+FROM node:22-slim AS final
 
-# Install packages needed for deployment
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Install runtime-only OS dependencies (like ffmpeg for video processing)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y ffmpeg && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Copy built application
-COPY --from=build /app /app
+# Copy the pruned production node_modules from the 'builder' stage
+COPY --from=builder /app/node_modules ./node_modules
 
-# Entrypoint sets up the container.
-ENTRYPOINT [ "/app/docker-entrypoint.js" ]
+# Copy the compiled worker code from the 'builder' stage
+COPY --from=builder /app/dist ./dist
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+# Copy package.json to be able to run npm scripts
+COPY --from=builder /app/package.json ./package.json
+
+# The command to run when the container starts.
+# This will be overridden by the 'processes' command in your fly.toml,
+# but it's good practice to have it here.
+CMD ["npm", "run", "worker"]
