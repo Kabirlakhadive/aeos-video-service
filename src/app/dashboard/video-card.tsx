@@ -5,7 +5,8 @@ import { type Video } from "./page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Image as ImageIcon, Loader2 } from "lucide-react";
-import { getThumbnailUrls, getDownloadUrl } from "./actions"; // <-- IMPORT NEW ACTION
+import { getThumbnailUrls, getDownloadUrl } from "./actions";
+import Image from "next/image";
 
 interface VideoCardProps {
   video: Video;
@@ -14,7 +15,7 @@ interface VideoCardProps {
 export default function VideoCard({ video }: VideoCardProps) {
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
   const [isLoadingThumbs, setIsLoadingThumbs] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false); // <-- NEW STATE
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (
@@ -65,34 +66,42 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   return (
-    <div className="p-4 border rounded-md flex gap-4 items-center">
-      <div className="w-32 h-20 bg-secondary rounded-md flex items-center justify-center">
+    <div className="p-4 border rounded-lg flex flex-col sm:flex-row gap-4 items-center hover:bg-muted/50 transition-colors">
+      <div className="w-32 h-20 bg-secondary rounded-md flex-shrink-0 relative">
         {video.status === "READY" && isLoadingThumbs && (
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="w-full h-full flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
         )}
         {video.status === "READY" &&
           !isLoadingThumbs &&
           thumbnailUrls.length > 0 && (
-            <img
+            <Image
               src={thumbnailUrls[0]}
               alt={`Thumbnail for ${video.name}`}
-              className="w-full h-full object-cover rounded-md"
+              fill
+              className="object-cover rounded-md"
+              sizes="128px"
             />
           )}
         {video.status !== "READY" && (
-          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          </div>
         )}
       </div>
 
-      <div className="flex-grow">
-        <p className="font-bold truncate">{video.name}</p>
+      <div className="flex-grow w-full">
+        <p className="font-bold text-lg truncate">{video.name}</p>
         <p className="text-sm text-muted-foreground">
           {new Date(video.created_at).toLocaleString()}
         </p>
-        <Badge variant={getStatusVariant()}>{video.status}</Badge>
+        <Badge variant={getStatusVariant()} className="mt-1">
+          {video.status}
+        </Badge>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex-shrink-0">
         {video.status === "READY" && (
           <Button
             variant="outline"
