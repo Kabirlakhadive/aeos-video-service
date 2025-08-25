@@ -79,7 +79,7 @@ export default async function VideoPage({ params }: VideoPageProps) {
       videoUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     } catch (err) {
       console.error("Error generating signed URL for video:", err);
-      videoUrlError = true; // Set a flag to show an error in the UI
+      videoUrlError = true;
     }
   }
 
@@ -113,7 +113,6 @@ export default async function VideoPage({ params }: VideoPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
         {/* Column 1: Video Player and Share Links */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Video Player */}
           <div className="aspect-video w-full">
             {typedVideo.status === "READY" && videoUrl ? (
               <video

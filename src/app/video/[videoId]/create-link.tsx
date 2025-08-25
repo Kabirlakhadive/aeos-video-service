@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ interface CreateShareLinkProps {
 }
 
 export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
@@ -67,11 +69,18 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
       toast.error("Failed to Create Link", {
         description: result.failure,
       });
+      setIsSubmitting(false);
+    } else {
+      toast.success("Link Created Successfully!");
+
+      setIsOpen(false);
+
+      setVisibility("PUBLIC");
+      setEmails("");
+      setExpiry("30d");
+      setIsSubmitting(false);
+      router.refresh();
     }
-    setIsSubmitting(false);
-    setVisibility("PUBLIC");
-    setEmails("");
-    setExpiry("30d");
   };
 
   return (

@@ -101,8 +101,8 @@ export async function createShareLink(payload: CreateLinkPayload) {
       console.error("Failed to send share notification email:", emailError);
     }
   }
-
   revalidatePath(`/video/${payload.videoId}`);
+  revalidatePath("/dashboard/links");
   return { success: data };
 }
 
