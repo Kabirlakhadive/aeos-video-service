@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Image as ImageIcon, Loader2 } from "lucide-react";
 import { getThumbnailUrls, getDownloadUrl } from "./actions";
+import Image from "next/image";
 
 interface VideoCardProps {
   video: Video;
@@ -65,9 +66,7 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   return (
-    // The main card container
     <div className="flex w-full items-center gap-4 rounded-lg border p-3 shadow-sm transition-colors hover:bg-muted/50">
-      {/* Thumbnail: Fixed size, will not shrink */}
       <div className="relative h-16 w-28 flex-shrink-0 rounded-md bg-secondary">
         {video.status === "READY" && isLoadingThumbs && (
           <div className="flex h-full w-full items-center justify-center">
@@ -77,10 +76,11 @@ export default function VideoCard({ video }: VideoCardProps) {
         {video.status === "READY" &&
           !isLoadingThumbs &&
           thumbnailUrls.length > 0 && (
-            <img
+            <Image
               src={thumbnailUrls[0]}
               alt={`Thumbnail for ${video.name}`}
               className="h-full w-full rounded-md object-cover"
+              fill
             />
           )}
         {video.status !== "READY" && (
@@ -90,18 +90,16 @@ export default function VideoCard({ video }: VideoCardProps) {
         )}
       </div>
 
-      {/* Middle Section: Title, Date, Status. Will grow and shrink */}
       <div className="flex-grow min-w-0">
         <p className="truncate font-semibold">{video.name}</p>
         <p className="text-xs text-muted-foreground">
-          {new Date(video.created_at).toLocaleString()}
+          {new Date(video.created_at).toISOString()}
         </p>
         <div className="mt-1">
           <Badge variant={getStatusVariant()}>{video.status}</Badge>
         </div>
       </div>
 
-      {/* Right Section: Download Button. Will not shrink */}
       <div className="flex-shrink-0">
         {video.status === "READY" && (
           <Button
@@ -109,7 +107,7 @@ export default function VideoCard({ video }: VideoCardProps) {
             size="sm"
             onClick={handleDownload}
             disabled={isDownloading}
-            className="hidden sm:flex" // Hide on very small screens, show on 'sm' and up
+            className="hidden sm:flex"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

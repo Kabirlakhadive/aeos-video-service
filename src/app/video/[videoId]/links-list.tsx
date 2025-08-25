@@ -3,12 +3,15 @@
 
 import { type ShareLink } from "./page";
 import { Copy } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ShareLinksListProps {
   links: ShareLink[];
 }
 
 export default function ShareLinksList({ links }: ShareLinksListProps) {
+  const [origin, setOrigin] = useState("");
+
   if (links.length === 0) {
     return (
       <p className="p-4 text-sm text-center">
@@ -23,6 +26,12 @@ export default function ShareLinksList({ links }: ShareLinksListProps) {
 
     alert("Link copied to clipboard!");
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   return (
     <div className="flow-root">
@@ -58,10 +67,9 @@ export default function ShareLinksList({ links }: ShareLinksListProps) {
               {links.map((link) => (
                 <tr key={link.id}>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium sm:pl-0">
-                    {`${window.location.origin}/share/${link.token.substring(
-                      0,
-                      12
-                    )}...`}
+                    {origin
+                      ? `${origin}/share/${link.token.substring(0, 12)}...`
+                      : "loading..."}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm">
                     {link.visibility}

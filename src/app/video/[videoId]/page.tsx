@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { getThumbnailUrls } from "./actions";
+import Image from "next/image";
 
 export type ShareLink = {
   id: string;
@@ -183,11 +184,12 @@ export default async function VideoPage({ params }: VideoPageProps) {
                         key={index}
                         className="aspect-video relative rounded-md overflow-hidden"
                       >
-                        <img
+                        <Image
                           src={url}
                           alt={`Thumbnail ${index + 1}`}
                           className="object-cover"
                           sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 10vw"
+                          fill
                         />
                       </div>
                     ))}

@@ -12,7 +12,9 @@ import VideoDropzone from "./videoDropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { createVideoRecord, generatePresignedUrl } from "./actions";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { formatBytes } from "@/lib/utils";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -108,8 +110,15 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <Card>
+    <div className="space-y-4">
+      <Button asChild variant="ghost" className="pl-0">
+        <Link href="/dashboard">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Link>
+      </Button>
+
+      <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle>Upload Your Video</CardTitle>
           <CardDescription>
@@ -118,36 +127,48 @@ export default function UploadPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {!isUploading && !uploadSuccess && (
+            {!file && !isUploading && !uploadSuccess && (
               <VideoDropzone onFileAccepted={handleFileAccepted} />
             )}
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
+
             {file && !isUploading && !uploadSuccess && (
-              <div className="text-center">
+              <div className="text-center space-y-4">
+                <p>
+                  Ready to upload:{" "}
+                  <span className="font-bold">{file.name}</span> (
+                  {formatBytes(file.size)})
+                </p>
                 <Button onClick={handleUpload} size="lg">
                   Upload Video
                 </Button>
               </div>
             )}
-            {isUploading && !uploadSuccess && (
+
+            {isUploading && (
               <div className="space-y-2 text-center">
-                <p className="text-sm">Uploading: {file?.name}</p>
+                <p className="text-sm font-semibold truncate">
+                  Uploading: {file?.name}
+                </p>
                 <Progress value={uploadProgress} className="w-full" />
                 <p className="text-xs text-muted-foreground">
                   {Math.round(uploadProgress)}% complete
                 </p>
               </div>
             )}
+
             {uploadSuccess && (
               <div className="flex flex-col items-center justify-center text-center p-6 bg-green-500/10 rounded-lg">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />
                 <h3 className="text-lg font-semibold">Upload Successful!</h3>
                 <p className="text-sm text-muted-foreground">
-                  Your video is now being processed.
+                  Your video is now being processed and will appear on your
+                  dashboard.
                 </p>
               </div>
+            )}
+
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
             )}
           </div>
         </CardContent>
