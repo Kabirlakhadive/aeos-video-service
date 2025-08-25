@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { createShareLink } from "./actions";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 type ExpiryValue = "1h" | "12h" | "1d" | "30d" | "never";
 
@@ -32,13 +33,23 @@ interface CreateShareLinkProps {
 
 export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [emails, setEmails] = useState("");
   const [expiry, setExpiry] = useState<ExpiryValue>("30d");
-  const [error, setError] = useState<string | null>(null);
 
   const handleCreateLink = async () => {
-    setError(null);
+    setIsSubmitting(true);
+    setIsOpen(false);
+    toast.success("Link Created Successfully!", {
+      description: "The new link will appear in the list shortly.",
+    });
+    if (visibility === "PRIVATE" && emails.length > 0) {
+      toast.info("Email Notification Sent", {
+        description:
+          "For this demo, all emails are sent to a pre-verified address.",
+      });
+    }
     const result = await createShareLink({
       videoId,
       visibility,
@@ -53,24 +64,14 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
     });
 
     if (result.failure) {
-      setError(result.failure);
-    } else {
-      toast.success("Link Created Successfully!", {
-        description: "The shareable link has been added to the list below.",
+      toast.error("Failed to Create Link", {
+        description: result.failure,
       });
-
-      if (visibility === "PRIVATE" && emails.length > 0) {
-        toast.info("Email Notification Sent", {
-          description:
-            "For this demo, all emails are sent to a pre-verified address.",
-        });
-      }
-
-      setIsOpen(false);
-      setVisibility("PUBLIC");
-      setEmails("");
-      setExpiry("30d");
     }
+    setIsSubmitting(false);
+    setVisibility("PUBLIC");
+    setEmails("");
+    setExpiry("30d");
   };
 
   return (
@@ -86,7 +87,6 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="grid gap-2">
             <Label>Visibility</Label>
             <RadioGroup
@@ -145,7 +145,10 @@ export default function CreateShareLink({ videoId }: CreateShareLinkProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleCreateLink}>Generate Link</Button>
+          <Button onClick={handleCreateLink} disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting ? "Generating..." : "Generate Link"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
