@@ -49,9 +49,7 @@ export default function VideoDashboard({ initialVideos }: VideoDashboardProps) {
   return (
     <div className="space-y-4">
       {videos.map((video) => (
-        <Link key={video.id} href={`/video/${video.id}`} className="block">
-          <VideoCard video={video} />
-        </Link>
+        <VideoCard key={video.id} video={video} />
       ))}
     </div>
   );

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Image as ImageIcon, Loader2 } from "lucide-react";
 import { getThumbnailUrls, getDownloadUrl } from "./actions";
 import Image from "next/image";
+import Link from "next/link";
 
 interface VideoCardProps {
   video: Video;
@@ -67,7 +68,7 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div className="flex w-full items-center gap-4 rounded-lg border p-3 shadow-sm transition-colors hover:bg-muted/50">
-      <div className="relative h-16 w-28 flex-shrink-0 rounded-md bg-secondary">
+      <div className="flex relative h-16 w-28 flex-shrink-0 rounded-md bg-secondary">
         {video.status === "READY" && isLoadingThumbs && (
           <div className="flex h-full w-full items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -89,17 +90,15 @@ export default function VideoCard({ video }: VideoCardProps) {
           </div>
         )}
       </div>
-
-      <div className="flex-grow min-w-0">
+      <Link href={`/video/${video.id}`} className="flex-grow min-w-0">
         <p className="truncate font-semibold">{video.name}</p>
         <p className="text-xs text-muted-foreground">
-          {new Date(video.created_at).toISOString()}
+          {new Date(video.created_at).toLocaleString()}
         </p>
         <div className="mt-1">
           <Badge variant={getStatusVariant()}>{video.status}</Badge>
         </div>
-      </div>
-
+      </Link>
       <div className="flex-shrink-0">
         {video.status === "READY" && (
           <Button
@@ -107,14 +106,14 @@ export default function VideoCard({ video }: VideoCardProps) {
             size="sm"
             onClick={handleDownload}
             disabled={isDownloading}
-            className="hidden sm:flex"
+            className="flex"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Download className="h-4 w-4" />
             )}
-            <span className="ml-2 hidden md:inline">Download</span>
+            <span className="ml-2 hidden sm:inline">Download</span>
           </Button>
         )}
       </div>
